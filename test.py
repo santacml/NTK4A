@@ -207,7 +207,7 @@ def rnnntk_batch(ingram, Vphi3, Vderphi3,
         if i < seqlen - 1:
             hhcov_f[..., i+1, 1:i+2] = hcov_f[..., i, :i+1] + varu * ingram[..., i+1, 1:i+2] + varb
 
-        hhcov_b[..., i, :i+1] = varw * Vphi3(*hhcov_b_prep(i))
+        hcov_b[..., i, :i+1] = varw * Vphi3(*hhcov_b_prep(i))
         if i < seqlen - 1:
             hhcov_b[..., i+1, 1:i+2] = hcov_b[..., i, :i+1] + varu * ingram_b[..., i+1, 1:i+2] + varb
 
@@ -220,15 +220,15 @@ def rnnntk_batch(ingram, Vphi3, Vderphi3,
     hcov_b = reflect(hcov_b)
     scov_b = varw**-1 * hcov_b
 
-    hhcov = (hhcov_f + hhcov_b ) 
-    hcov = (hcov_f + hcov_b ) 
+    hhcov = (hhcov_f + hhcov_b ) /2
+    hcov = (hcov_f + hcov_b ) / 2
     scov = varw**-1 * hcov
     
     if not avgpool:
         dhcov_f = np.zeros([batchsize, batchsize, seqlen+1])
         dhcov_f[..., -1] = varv
         for i in range(seqlen-1, -1, -1):
-            dhcov_f[..., i] = varw * Vderphi(hhcov_f[..., i, i]) * dhcov_f[..., i+1]
+            dhcov_f[..., i] = varw * Vderphi(hhcov[..., i, i]) * dhcov_f[..., i+1]
         dhcov_f /= varw
         dhcov_f = dhcov_f[..., :-1]
 
@@ -236,21 +236,21 @@ def rnnntk_batch(ingram, Vphi3, Vderphi3,
         dhcov_b = np.zeros([batchsize, batchsize, seqlen+1])
         dhcov_b[..., -1] = varv
         for i in range(seqlen-1, -1, -1):
-            dhcov_b[..., i] = varw * Vderphi(hhcov_b[..., i, i]) * dhcov_b[..., i+1]
+            dhcov_b[..., i] = varw * Vderphi(hhcov[..., i, i]) * dhcov_b[..., i+1]
         dhcov_b /= varw
         dhcov_b = dhcov_b[..., :-1]
 
         
         buf_f = np.einsum('abii->abi', ingram) + 1
-        buf_f[..., 1:] += np.einsum('abii->abi', scov_f[..., :-1, :-1])
+        buf_f[..., 1:] += np.einsum('abii->abi', scov[..., :-1, :-1])
         ntk_f = np.einsum('abi,abi->ab', dhcov_f, buf_f)
-        ntk_f += scov_f[..., -1, -1]
+        ntk_f += scov[..., -1, -1]
 
         
         buf_b = np.einsum('abii->abi', ingram_b) + 1
-        buf_b[..., 1:] += np.einsum('abii->abi', scov_b[..., :-1, :-1])
+        buf_b[..., 1:] += np.einsum('abii->abi', scov[..., :-1, :-1])
         ntk_b = np.einsum('abi,abi->ab', dhcov_b, buf_b)
-        ntk_b += scov_b[..., -1, -1]
+        ntk_b += scov[..., -1, -1]
         return (ntk_f + ntk_b ) 
 
     0/0
