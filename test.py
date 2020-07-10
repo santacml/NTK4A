@@ -446,7 +446,6 @@ def NTK_theory_vs_sim(inpseqs, infntk, varw, varu, varb, avgpool,
     print(infntk)
     for width in widths:
         print(np.sum(mysimcovs[width], axis=(0,)) / 100)
-        # 0/0
 
         _frobs = np.sum((mysimcovs[width] - infntk)**2,
                         axis=(1, 2)) / infntknorm**2
@@ -460,8 +459,8 @@ def NTK_theory_vs_sim(inpseqs, infntk, varw, varu, varb, avgpool,
 
 
 frob_df = NTK_theory_vs_sim(inps, thcov, varw, varu, varb,
-                           avgpool=avgpool, log2widthmax=11, nseeds=100)
-                        #    avgpool=avgpool, log2widthmax=14, nseeds=100)
+                        #    avgpool=avgpool, log2widthmax=11, nseeds=100)
+                           avgpool=avgpool, log2widthmax=14, nseeds=100)
 
 
 
